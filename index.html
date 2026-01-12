@@ -46,7 +46,9 @@
             align-items: center;
             justify-content: center;
             height: 100%;
-            backdrop-filter: blur(2px);
+            width: 100%;
+            backdrop-filter: blur(0px); /* Transition handled in JS if needed */
+            cursor: pointer; /* Indicates clickable background */
         }
 
         /* --- PLAYER CARD --- */
@@ -62,6 +64,17 @@
             flex-direction: column;
             gap: 20px;
             max-height: 80vh;
+            
+            /* New Transition properties for fading */
+            opacity: 1;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            cursor: default; /* Reset cursor inside card */
+        }
+
+        .player-card.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.95);
         }
 
         .song-info {
@@ -239,7 +252,7 @@
 
     <!-- MAIN UI -->
     <div id="app-container" style="display:none;">
-        <div class="player-card">
+        <div class="player-card" id="player-card">
             
             <div class="song-info">
                 <div class="song-title" id="current-title">Select a track...</div>
@@ -298,6 +311,7 @@
         const playlistContainer = document.getElementById('playlist-container');
         const startOverlay = document.getElementById('start-overlay');
         const appContainer = document.getElementById('app-container');
+        const playerCard = document.getElementById('player-card');
         const titleEl = document.getElementById('current-title');
         const statusEl = document.getElementById('status-text');
         const playBtn = document.getElementById('btn-play');
@@ -315,6 +329,14 @@
             startOverlay.style.display = 'none';
             appContainer.style.display = 'flex';
             await fetchFiles();
+        });
+
+        // --- TOGGLE UI VISIBILITY ---
+        appContainer.addEventListener('click', (e) => {
+            // If user clicks the background container (and not inside the card)
+            if(e.target === appContainer) {
+                playerCard.classList.toggle('hidden');
+            }
         });
 
         // --- GITHUB FETCHING LOGIC ---
@@ -357,7 +379,6 @@
                 // Build Playlist
                 playlist = mp3s.map(file => ({
                     name: file.name,
-                    // Use jsdelivr for performant CDN delivery of raw github files, or raw.githubusercontent
                     url: `https://raw.githubusercontent.com/${user}/${repo}/${GITHUB_BRANCH}/${encodeURIComponent(file.name)}`,
                     enabled: true
                 }));
